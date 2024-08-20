@@ -1,0 +1,10 @@
+<!-- app/templates/history.html -->
+{% extends 'base.html' %}
+{% block title %}History{% endblock %}
+{% block content %}
+    <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <h1 class="text-4xl mb-8">History</h1>
+        <p class="text-lg">This is the History page. You can display past results or logs here.</p>
+        <a href="{{ url_for('main.dashboard') }}" class="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">Back to Dashboard</a>
+    </div>
+{% endblock %}

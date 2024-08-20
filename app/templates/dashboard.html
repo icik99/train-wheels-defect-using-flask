@@ -1,0 +1,14 @@
+<!-- app/templates/dashboard.html -->
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+    <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <h1 class="text-4xl mb-8">Dashboard</h1>
+        <div class="space-y-4">
+            <a href="{{ url_for('main.run_test') }}" class="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 w-48 text-center">Run Test</a>
+            <a href="{{ url_for('main.about') }}" class="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 w-48 text-center">About Us</a>
+            <a href="{{ url_for('main.history') }}" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded hover:bg-yellow-700 w-48 text-center">History</a>
+            <a href="{{ url_for('main.logout') }}" class="bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-red-700 w-48 text-center">Exit</a>
+        </div>
+    </div>
+{% endblock %}

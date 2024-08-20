@@ -1,0 +1,10 @@
+<!-- app/templates/about.html -->
+{% extends 'base.html' %}
+{% block title %}About Us{% endblock %}
+{% block content %}
+    <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <h1 class="text-4xl mb-8">About Us</h1>
+        <p class="text-lg text-center">Smar+Pars adalah Aplikasi yang bertujuan untuk meningkatkan keselamatan operasional kereta dan mengurangi risiko gangguan dengan memberikan pemantauan dan peringatan dini terhadap kondisi roda.</p>
+        <a href="{{ url_for('main.dashboard') }}" class="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">Back to Dashboard</a>
+    </div>
+{% endblock %}
