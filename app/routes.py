@@ -1,8 +1,6 @@
-# app/routes.py
-from flask import render_template, redirect, url_for, request, flash, current_app
+from flask import render_template, redirect, url_for, request, flash, current_app, session
 from app.forms import RegistrationForm, LoginForm
 from flask import Blueprint
-from flask import session, redirect, url_for, flash, Blueprint
 import csv
 import io
 import matplotlib.pyplot as plt
@@ -12,10 +10,20 @@ import pandas as pd
 import seaborn as sns
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
-from matplotlib.ticker import FuncFormatter  # Tambahkan impor ini
+from matplotlib.ticker import FuncFormatter
 import numpy as np
 
 main = Blueprint('main', __name__)
+
+# Helper function to check if user is logged in
+def login_required(f):
+    def wrap(*args, **kwargs):
+        if 'logged_in' not in session:
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('main.login'))
+        return f(*args, **kwargs)
+    wrap.__name__ = f.__name__
+    return wrap
 
 @main.route('/')
 def home():
@@ -44,6 +52,8 @@ def login():
         response = supabase.table('users').select("*").eq('email', form.email.data).single().execute()
         user_data = response.data
         if user_data and user_data.get('password') == form.password.data:
+            session['logged_in'] = True
+            session['user_id'] = user_data.get('id')  # Simpan ID pengguna di sesi jika perlu
             flash('Login successful!', 'success')
             return redirect(url_for('main.dashboard'))
         else:
@@ -51,15 +61,14 @@ def login():
     return render_template('login.html', form=form)
 
 @main.route('/logout')
+@login_required
 def logout():
-    # Hapus semua data dalam sesi
     session.clear()
-    # Berikan pesan kepada pengguna bahwa mereka telah logout
     flash('You have been logged out.', 'info')
-    # Arahkan kembali ke halaman login
     return redirect(url_for('main.login'))
 
 @main.route('/dashboard')
+@login_required
 def dashboard():
     return render_template('dashboard.html')
 
@@ -68,11 +77,12 @@ def about():
     return render_template('about.html')
 
 @main.route('/history')
+@login_required
 def history():
     return render_template('history.html')
 
-
 @main.route('/run_test', methods=['GET', 'POST'])
+@login_required
 def run_test():
     if request.method == 'POST':
         # Check if a file is uploaded
