@@ -53,7 +53,7 @@ def login():
         user_data = response.data
         if user_data and user_data.get('password') == form.password.data:
             session['logged_in'] = True
-            session['user_id'] = user_data.get('id')  # Simpan ID pengguna di sesi jika perlu
+            session['user_id'] = user_data.get('id')  # Simpan ID pengguna di sesi if perlu
             flash('Login successful!', 'success')
             return redirect(url_for('main.dashboard'))
         else:
@@ -98,66 +98,88 @@ def run_test():
         filename = file.filename
         
         if file:
+            # Membaca data dari file CSV
             df = pd.read_csv(file, delimiter=',')
             df['Time'] = pd.to_datetime(df['Time'], format='%Y-%m-%d_%H:%M:%S.%f')
             
-            # Algorimta KNN Utk Keputusan
+            # Algoritma KNN untuk Keputusan
             df['Master PV'] = df['Master PV'].apply(lambda x: float(str(x).replace(',', '.')))
             df['Condition'] = df['Master PV'].apply(lambda x: 'Aus' if x < 0 else 'Bagus')
 
-            # Prepare features and labels
+            # Tambahkan kolom 'Titik' berdasarkan indeks data
+            df['Titik'] = range(1, len(df) + 1)
+
+            # Data pelatihan
             X = df[['Master PV']]
             y = df['Condition']
 
-            # Create training data with some sample points
-            training_data = pd.DataFrame({
-                'Master PV': np.concatenate([df['Master PV'].values, [df['Master PV'].mean()]]),
-                'Condition': df['Condition'].tolist() + ['Bagus']
-            })
-            print(training_data)
-
-            # Train the KNN model
-            X_train = training_data[['Master PV']]
-            y_train = training_data['Condition']
+            # Membuat model KNN
             scaler = StandardScaler()
-            X_train_scaled = scaler.fit_transform(X_train)
+            X_scaled = scaler.fit_transform(X)
             
-            knn = KNeighborsClassifier(n_neighbors=1)  # Use 1 neighbor due to limited data
-            knn.fit(X_train_scaled, y_train)
+            knn = KNeighborsClassifier(n_neighbors=1)
+            knn.fit(X_scaled, y)
+
+            # Prediksi untuk jarak tempuh hingga 36.525 KM
+            additional_distance = 36525 - 24052
+            df_pred = df.copy()
+            df_pred['Titik'] = df_pred['Titik']
+            df_pred['Master PV'] = df_pred['Master PV'].apply(lambda x: x * 0.95)  # Mengasumsikan penurunan PV sebesar 5%
             
-            # Make prediction on the provided data
-            X_scaled = scaler.transform(X)
-            prediction = knn.predict(X_scaled)
-            predicted_condition = 'Aus' if prediction[0] == 'Aus' else 'Bagus'
+            X_pred_scaled = scaler.transform(df_pred[['Master PV']])
+            df_pred['Condition'] = knn.predict(X_pred_scaled)
 
-            # Kode Tampilan Grafik
-            plt.figure(figsize=(10,6))
-            ax = sns.lineplot(x=df['Time'], y=df['Master PV'], marker='o')
+            # Kondisi roda sebelum dan sesudah prediksi
+            condition_before_prediction = df['Condition'].iloc[-1]
+            condition_after_prediction = df_pred['Condition'].iloc[-1]
 
-            for i, (x, y) in enumerate(zip(df['Time'], df['Master PV'])):
-                if i % 2 == 0:  # Annotate every 2nd point to reduce clutter
-                    ax.annotate(f'{y:.2f}', (x, y), textcoords="offset points", xytext=(0,10), ha='center', fontsize=9)
+            # Grafik 1: Menampilkan data roda sejauh 24.052 KM
+            plt.figure(figsize=(12, 6))
+            ax1 = sns.lineplot(x=df['Titik'], y=df['Master PV'], marker='o')
+            for i, (x, y) in enumerate(zip(df['Titik'], df['Master PV'])):
+                ax1.annotate(f'{y:.2f}', (x, y), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
 
-            plt.title('Master PV Over Time')
-            plt.xlabel('Waktu')
+            plt.title('Grafik Master PV (Jarak Tempuh 24.052 KM)')
+            plt.xlabel('Titik')
             plt.ylabel('Master PV')
-
-            formatter = FuncFormatter(lambda x, _: f'{x:.2f}')
-            ax.yaxis.set_major_formatter(formatter)
+            ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
             plt.xticks(rotation=45, ha='right')
-            ax.grid(True, linestyle='--', alpha=0.7)
+            plt.grid(True, linestyle='--', alpha=0.7)
             plt.tight_layout()
-            ax.grid(True, linestyle='--', alpha=0.7)
 
-            # Save the plot as a PNG image
-            img = io.BytesIO()
-            plt.savefig(img, format='png')
-            img.seek(0)
-            plot_url = base64.b64encode(img.getvalue()).decode()
+            # Simpan grafik sebagai gambar PNG
+            img1 = io.BytesIO()
+            plt.savefig(img1, format='png')
+            img1.seek(0)
+            plot_url_1 = base64.b64encode(img1.getvalue()).decode()
 
-            # Generate table data
-            table_data = df.to_html(classes='table-auto w-fit text-end text-lg border-collapse border border-gray-300', index=False, header=True)
+            plt.clf()  # Bersihkan grafik sebelumnya untuk membuat yang baru
 
-            return render_template('run_test.html', plot_url=plot_url, condition=predicted_condition, table_data=table_data, filename=filename)
-    
+            # Grafik 2: Prediksi setelah jarak tempuh 36.525 KM
+            plt.figure(figsize=(12, 6))
+            ax2 = sns.lineplot(x=df_pred['Titik'], y=df_pred['Master PV'], marker='o')
+            for i, (x, y) in enumerate(zip(df_pred['Titik'], df_pred['Master PV'])):
+                ax2.annotate(f'{y:.2f}', (x, y), textcoords="offset points", xytext=(0, 10), ha='center', fontsize=9)
+
+            plt.title('Grafik Prediksi Master PV (Jarak Tempuh 36.525 KM)')
+            plt.xlabel('Titik')
+            plt.ylabel('Master PV')
+            ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
+            plt.xticks(rotation=45, ha='right')
+            plt.grid(True, linestyle='--', alpha=0.7)
+            plt.tight_layout()
+
+            # Simpan grafik sebagai gambar PNG
+            img2 = io.BytesIO()
+            plt.savefig(img2, format='png')
+            img2.seek(0)
+            plot_url_2 = base64.b64encode(img2.getvalue()).decode()
+
+            return render_template('run_test.html', plot_url_1=plot_url_1, plot_url_2=plot_url_2, 
+                                   condition_before_prediction=condition_before_prediction, 
+                                   condition_after_prediction=condition_after_prediction,
+                                   filename=filename)
+
     return render_template('run_test.html')
+
+

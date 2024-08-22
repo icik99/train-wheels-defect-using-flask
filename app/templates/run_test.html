@@ -13,23 +13,22 @@
         </form>
         <div class="bg-white p-3 rounded-lg">
 
-            {% if table_data %}
+            {% if filename %}
                 <div>
                     <h2 class="text-lg mb-4">File {{ filename }}</h2>
-                    <div class="text-end">
-                        <!-- {{ table_data|safe }} -->
-                    </div>
                 </div>
             {% endif %}
 
             
-            {% if plot_url %}
+            {% if plot_url_1 %}
                 <div class="mt-6">
-                    <p class="text-lg mt-2">Hasil Analisis: Kondisi Ban Dalam Keadaan <strong>{{ condition }}</strong></p>
+                    <p class="text-lg mt-2">Hasil Analisis: Kondisi roda sekarang dalam keadaaan <strong>{{ condition_before_prediction }}</strong></p>
+                    <p class="text-lg mt-2">Hasil Prediksi: Kondisi roda pada jarak tempuh 36.525 kilometer akan berada dalam keadaaan <strong>{{ condition_after_prediction }}</strong></p>
                 </div>
                 <div class="mt-6">
                     <h2 class="text-lg mb-4">Grafik: </h2>
-                    <img src="data:image/png;base64,{{ plot_url }}" alt="Grafik Master PV">
+                    <img src="data:image/png;base64,{{ plot_url_1 }}" alt="Grafik 24.052 KM">
+                    <img src="data:image/png;base64,{{ plot_url_2 }}" alt="Grafik Prediksi 36.525 KM">
                 </div>
             {% endif %}
         </div>
