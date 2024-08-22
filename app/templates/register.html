@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}Register{% endblock %}
 {% block content %}
-<div class="flex bg-white">
-    <img class="mb-2 w-[1093px] " src="{{ url_for('static', filename='images/base.png') }}" alt="Deskripsi Gambar">
-    <div class="w-full min-h-screen bg-white px-6 pt-6 pb-20 rounded shadow-md ">
+<div class="flex flex-col md:flex-row bg-white">
+    <img class="mb-2 w-full md:w-1/2 lg:w-[850px] object-cover" src="{{ url_for('static', filename='images/base.png') }}" alt="Deskripsi Gambar">
+    <div class="w-full min-h-screen bg-white px-6 pt-6 pb-20 rounded shadow-md">
         <div class="mb-20">
             <div class="flex items-center justify-center">
                 <img class="mb-2" src="{{ url_for('static', filename='images/logo-login.png') }}" alt="Deskripsi Gambar">
@@ -11,25 +11,22 @@
             <h1 class="text-3xl underline font-semibold text-center">Get Started</h1>
             <h1 class="text-lg underline text-center">by creating a free account.</h1>
         </div>
-        <form method="POST" action="{{ url_for('main.register') }}" class="bg-white ">
+        <form method="POST" action="{{ url_for('main.register') }}" class="bg-white">
             {{ form.hidden_tag() }}
             <div class="mb-4">
-                <input id="name" type="name" name="name" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Full name ...">
-
+                <input id="name" type="text" name="name" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Full name ...">
             </div>
             <div class="mb-4">
                 <input id="email" type="email" name="email" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Valid email...">
             </div>
             <div class="mb-4">
-                <input id="phone" type="phone" name="phone" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Phone number...">
+                <input id="phone" type="tel" name="phone" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Phone number...">
             </div>
             <div class="mb-4">
                 <input id="password" type="password" name="password" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Strong password...">
-
             </div>
             <div class="mb-4">
                 <input id="confirm_password" type="password" name="confirm_password" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Confirm Password...">
-
             </div>
             <div class="mb-4">
                 <button type="submit" class="bg-[#252525] text-[#F9C679] w-full text-2xl font-semibold py-[17px] rounded underline hover:bg-slate-700">
@@ -37,12 +34,10 @@
                 </button>
             </div>
             <div class="flex gap-2 items-center justify-center">
-                <h1 class="underline">Already member?</h1>
-                <a href="{{ url_for('main.login') }}"  class="text-[#F9C679] font-bold">Log in</a>
+                <h1 class="underline">Already a member?</h1>
+                <a href="{{ url_for('main.login') }}" class="text-[#F9C679] font-bold">Log in</a>
             </div>
         </form>
-
     </div>
-
 </div>
 {% endblock %}
