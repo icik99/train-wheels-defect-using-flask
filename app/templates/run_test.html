@@ -1,35 +1,37 @@
 {% extends 'base.html' %}
 {% block title %}Run Test{% endblock %}
 {% block content %}
-    <div class="container mt-8 px-10">
-        <h1 class="text-3xl font-semibold mb-6">Run Test</h1>
+    <div class="min-h-screen bg-cover bg-center py-10 px-10" style="background-image: url('{{ url_for('static', filename='images/base.png') }}')">
+        <h1 class="border-b-2 w-fit font-bold text-center text-white text-9xl mb-5">Run Test</h1>
         
         <form action="{{ url_for('main.run_test') }}" method="post" enctype="multipart/form-data" class="mb-6">
-            <label class="block mb-2 text-lg font-medium text-gray-700">Upload CSV File:</label>
+            <label class="block mb-2 text-lg text-white font-medium text-gray-700">Upload CSV File:</label>
             <input type="file" name="file" class="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none">
             <button type="submit" class="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">
                 Upload and Analyze
             </button>
         </form>
+        <div class="bg-white p-3 rounded-lg">
 
-        {% if table_data %}
-            <div>
-                <h2 class="text-lg mb-4">File {{ filename }}</h2>
-                <div class="text-end">
-                    <!-- {{ table_data|safe }} -->
+            {% if table_data %}
+                <div>
+                    <h2 class="text-lg mb-4">File {{ filename }}</h2>
+                    <div class="text-end">
+                        <!-- {{ table_data|safe }} -->
+                    </div>
                 </div>
-            </div>
-        {% endif %}
+            {% endif %}
 
-        
-        {% if plot_url %}
-            <div class="mt-6">
-                <p class="text-lg mt-2">Hasil Analisis: Kondisi Ban Dalam Keadaan <strong>{{ condition }}</strong></p>
-            </div>
-            <div class="mt-6">
-                <h2 class="text-lg mb-4">Grafik: </h2>
-                <img src="data:image/png;base64,{{ plot_url }}" alt="Grafik Master PV">
-            </div>
-        {% endif %}
+            
+            {% if plot_url %}
+                <div class="mt-6">
+                    <p class="text-lg mt-2">Hasil Analisis: Kondisi Ban Dalam Keadaan <strong>{{ condition }}</strong></p>
+                </div>
+                <div class="mt-6">
+                    <h2 class="text-lg mb-4">Grafik: </h2>
+                    <img src="data:image/png;base64,{{ plot_url }}" alt="Grafik Master PV">
+                </div>
+            {% endif %}
+        </div>
     </div>
 {% endblock %}

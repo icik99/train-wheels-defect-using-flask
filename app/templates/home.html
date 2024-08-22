@@ -2,11 +2,13 @@
 {% extends 'base.html' %}
 {% block title %}Home{% endblock %}
 {% block content %}
-    <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <h1 class="text-4xl mb-8">Welcome to Our Application</h1>
-        <div class="space-x-4">
-            <a href="{{ url_for('main.login') }}" class="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">Login</a>
-            <a href="{{ url_for('main.register') }}" class="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700">Register</a>
+    <div class="flex flex-col items-center justify-center min-h-screen bg-white">
+        <!-- <h1 class="text-4xl mb-4 font-semibold">Welcome to SMAR + PARS Application</h1> -->
+        <img class="mb-2" src="{{ url_for('static', filename='images/logo-login.png') }}" alt="Deskripsi Gambar">
+        <h2 class="mb-[170px] underline text-xl font-bold">Train Wheels Defect App</h2>
+        <div class="space-x-[313px]">
+            <a href="{{ url_for('main.login') }}" class="bg-[#252525] text-[#F9C679] w-[300px] text-sm font-semibold py-2 px-12 rounded underline hover:bg-slate-700">Sign In</a>
+            <a href="{{ url_for('main.register') }}" class="bg-[#252525] text-[#F9C679] w-[300px] text-sm font-semibold py-2 px-12 rounded underline hover:bg-slate-700">Sign Up</a>
         </div>
     </div>
 {% endblock %}

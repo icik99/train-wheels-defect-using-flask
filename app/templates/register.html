@@ -1,34 +1,48 @@
 {% extends 'base.html' %}
 {% block title %}Register{% endblock %}
 {% block content %}
-<div class="px-10">
-    <h2 class="text-2xl mb-6">Register</h2>
-    <form method="POST" action="{{ url_for('main.register') }}" class="bg-white p-6 rounded shadow-md">
-        {{ form.hidden_tag() }}
-        <div class="mb-4">
-            {{ form.name.label(class="block text-gray-700") }}
-            {{ form.name(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
+<div class="flex bg-white">
+    <img class="mb-2 w-[1093px] " src="{{ url_for('static', filename='images/base.png') }}" alt="Deskripsi Gambar">
+    <div class="w-full min-h-screen bg-white px-6 pt-6 pb-20 rounded shadow-md ">
+        <div class="mb-20">
+            <div class="flex items-center justify-center">
+                <img class="mb-2" src="{{ url_for('static', filename='images/logo-login.png') }}" alt="Deskripsi Gambar">
+            </div>
+            <h1 class="text-3xl underline font-semibold text-center">Get Started</h1>
+            <h1 class="text-lg underline text-center">by creating a free account.</h1>
         </div>
-        <div class="mb-4">
-            {{ form.email.label(class="block text-gray-700") }}
-            {{ form.email(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
-        </div>
-        <div class="mb-4">
-            {{ form.phone.label(class="block text-gray-700") }}
-            {{ form.phone(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
-        </div>
-        <div class="mb-4">
-            {{ form.password.label(class="block text-gray-700") }}
-            {{ form.password(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
-        </div>
-        <div class="mb-4">
-            {{ form.confirm_password.label(class="block text-gray-700") }}
-            {{ form.confirm_password(class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline") }}
-        </div>
-        <div class="mb-4">
-            {{ form.submit(class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline") }}
-        </div>
-    </form>
+        <form method="POST" action="{{ url_for('main.register') }}" class="bg-white ">
+            {{ form.hidden_tag() }}
+            <div class="mb-4">
+                <input id="name" type="name" name="name" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Full name ...">
+
+            </div>
+            <div class="mb-4">
+                <input id="email" type="email" name="email" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Valid email...">
+            </div>
+            <div class="mb-4">
+                <input id="phone" type="phone" name="phone" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Phone number...">
+            </div>
+            <div class="mb-4">
+                <input id="password" type="password" name="password" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Strong password...">
+
+            </div>
+            <div class="mb-4">
+                <input id="confirm_password" type="confirm_password" name="confirm_password" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Confirm Password...">
+
+            </div>
+            <div class="mb-4">
+                <button type="submit" class="bg-[#252525] text-[#F9C679] w-full text-2xl font-semibold py-[17px] rounded underline hover:bg-slate-700">
+                    Register
+                </button>
+            </div>
+            <div class="flex gap-2 items-center justify-center">
+                <h1 class="underline">Already member?</h1>
+                <a href="{{ url_for('main.login') }}"  class="text-[#F9C679] font-bold">Log in</a>
+            </div>
+        </form>
+
+    </div>
 
 </div>
 {% endblock %}

@@ -2,13 +2,20 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard{% endblock %}
 {% block content %}
-    <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <h1 class="text-4xl mb-8">Dashboard</h1>
-        <div class="space-y-4">
-            <a href="{{ url_for('main.run_test') }}" class="bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 w-48 text-center">Run Test</a>
-            <a href="{{ url_for('main.about') }}" class="bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-700 w-48 text-center">About Us</a>
-            <a href="{{ url_for('main.history') }}" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded hover:bg-yellow-700 w-48 text-center">History</a>
-            <a href="{{ url_for('main.logout') }}" class="bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-red-700 w-48 text-center">Exit</a>
+    <div class="min-h-screen bg-cover bg-center py-10" style="background-image: url('{{ url_for('static', filename='images/base.png') }}');">
+        <h1 class="text-4xl text-white font-semibold text-center mb-20">SELAMAT DATANG</h1>
+        <div class="flex justify-between items-center px-[100px]">
+            <div>
+                <h1 class=" underline font-bold text-center text-white text-9xl">SAFETY</h1>
+                <h1 class=" underline font-bold text-center text-white text-9xl">NO</h1>
+                <h1 class=" underline font-bold text-center text-white text-9xl">LIMIT</h1>
+            </div>
+            <div class="space-y-4 flex flex-col items-center">
+                <a href="{{ url_for('main.run_test') }}" class="bg-[#252525] text-[#F9C679] w-[300px] text-2xl font-semibold py-4 px-12 rounded underline hover:bg-slate-700">Run Test</a>
+                <a href="{{ url_for('main.about') }}" class="bg-[#252525] text-[#F9C679] w-[300px] text-2xl font-semibold py-4 px-12 rounded underline hover:bg-slate-700">About Us</a>
+                <a href="{{ url_for('main.history') }}" class="bg-[#252525] text-[#F9C679] w-[300px] text-2xl font-semibold py-4 px-12 rounded underline hover:bg-slate-700">History</a>
+                <a href="{{ url_for('main.logout') }}" class="bg-[#252525] text-[#F9C679] w-[300px] text-2xl font-semibold py-4 px-12 rounded underline hover:bg-slate-700">Exit</a>
+            </div>
         </div>
     </div>
 {% endblock %}
