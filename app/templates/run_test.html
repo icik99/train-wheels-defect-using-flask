@@ -2,35 +2,63 @@
 {% block title %}Run Test{% endblock %}
 {% block content %}
     <div class="min-h-screen bg-cover bg-center py-10 px-10" style="background-image: url('{{ url_for('static', filename='images/base.png') }}')">
-        <h1 class="border-b-2 w-fit font-bold text-center text-white text-9xl mb-5">Run Test</h1>
         
-        <form action="{{ url_for('main.run_test') }}" method="post" enctype="multipart/form-data" class="mb-6">
-            <label class="block mb-2 text-lg text-white font-medium text-gray-700">Upload CSV File:</label>
-            <input type="file" name="file" class="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none">
-            <button type="submit" class="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">
-                Upload and Analyze
-            </button>
-        </form>
+        <h1 class="border-b-2 w-fit font-bold text-center text-white text-9xl mb-5">Run Test</h1>
         <div class="bg-white p-3 rounded-lg">
+            <form action="{{ url_for('main.run_test') }}" method="post" enctype="multipart/form-data" class="mb-6 space-y-5">
+                <!-- Input for CSV File -->
+                <div class="w-full">
+                    <label class="block mb-1 text-lg font-medium text-gray-700">Unggah File CSV:</label>
+                    <input type="file" name="file" class="appearance-none rounded bg-[#C4C4C433] w-full px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                
+                <!-- Input for Current Distance -->
+                <div class="w-full">
+                    <label class="block mb-1 text-lg font-medium text-gray-700">Jarak Tempuh Roda Saat Ini (dalam Kilometer):</label>
+                    <input type="number" name="current_distance" placeholder="Masukkan jarak tempuh roda saat ini (km)" class="appearance-none rounded bg-[#C4C4C433] w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                
+                <!-- Input for Predicted Distance -->
+                <div class="w-full">
+                    <label class="block mb-1 text-lg font-medium text-gray-700">Prediksi Jarak yang Akan Ditempuh (dalam Kilometer):</label>
+                    <input type="number" name="predicted_distance" placeholder="Masukkan jarak tempuh yang diprediksi (km)" class="appearance-none rounded bg-[#C4C4C433] w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                
+                <!-- Input for Assumption Decrease -->
+                <div class="w-full">
+                    <label class="block mb-1 text-lg font-medium text-gray-700">Asumsi Penurunan (dalam Persen):</label>
+                    <input type="number" name="assumption_decrease" placeholder="Masukkan persentase penurunan" class="appearance-none rounded bg-[#C4C4C433] w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                
+                <!-- Submit Button -->
+                 <div class="flex gap-2 items-center">
+                     <!-- <button class="w-full text-[#252525] bg-[#F9C679] w-full text-lg font-semibold py-2 rounded hover:bg-yellow-700"> -->
+                         <a href="{{ url_for('main.dashboard') }}" class="w-full text-[#252525] bg-[#F9C679] w-full text-lg font-semibold py-2 text-center rounded hover:bg-yellow-700">Back to Dashboard</a>
+                     <!-- </button> -->
+                     <button type="submit" class="bg-[#252525] text-[#F9C679] w-full text-lg font-semibold py-2 rounded hover:bg-slate-700 ">
+                         Unggah dan Analisis
+                     </button>
+                 </div>
 
+            </form>                      
             {% if filename %}
                 <div>
-                    <h2 class="text-lg mb-4">File {{ filename }}</h2>
+                    <h2 class="text-lg mb-4">File: {{ filename }}</h2>
                 </div>
             {% endif %}
 
-            
             {% if plot_url_1 %}
                 <div class="mt-6">
-                    <p class="text-lg mt-2">Hasil Analisis: Kondisi roda sekarang dalam keadaaan <strong>{{ condition_before_prediction }}</strong></p>
-                    <p class="text-lg mt-2">Hasil Prediksi: Kondisi roda pada jarak tempuh 36.525 kilometer akan berada dalam keadaaan <strong>{{ condition_after_prediction }}</strong></p>
+                    <p class="text-lg font-semibold">Analisis Hasil:</p>
+                    <p class="text-lg mt-2">Saat ini, kondisi roda adalah <strong class="underline">{{ condition_before_prediction }}</strong>.</p>
+                    <p class="text-lg mt-2">Berdasarkan prediksi, setelah roda menempuh jarak <strong class="underline">{{ predicted_distance }} kilometer</strong>, kondisi roda akan menjadi <strong class="underline">{{ condition_after_prediction }}</strong>.</p>
                 </div>
                 <div class="mt-6">
                     <h2 class="text-lg mb-4">Grafik: </h2>
-                    <img src="data:image/png;base64,{{ plot_url_1 }}" alt="Grafik 24.052 KM">
-                    <img src="data:image/png;base64,{{ plot_url_2 }}" alt="Grafik Prediksi 36.525 KM">
+                    <img class="w-[1000px] h-[500px]" src="data:image/png;base64,{{ plot_url_1 }}" alt="Grafik">
                 </div>
             {% endif %}
+
         </div>
     </div>
 {% endblock %}
