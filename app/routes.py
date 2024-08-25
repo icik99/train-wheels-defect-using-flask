@@ -154,14 +154,71 @@ def run_test():
             overall_condition_before = 'Bagus' if num_pos_before >= num_neg_before else 'Aus'
             overall_condition_after = 'Bagus' if num_pos_after >= num_neg_after else 'Aus'
 
+            # Identify negative points for early warning (current)
+            negative_points_before = df[df['Master PV'] < 0][['Titik', 'Master PV']]
+
+            df_before = pd.DataFrame(df)
+            df_after = pd.DataFrame(df_pred)
+
+            # Identify negative points and apply styling (current)
+            negative_points_before = df_before[df_before['Master PV'] < 0][['Titik', 'Master PV']]
+            negative_points_before_styled = negative_points_before.style \
+                .set_table_attributes('class="table table-bordered table-striped table-hover table-sm"') \
+                .format(precision=2) \
+                .set_properties(**{
+                    'text-align': 'center',
+                    'background-color': '#f9f9f9',
+                    'color': '#333',
+                    'border': '1px solid #ddd',
+                    'padding': '14px'  # Adding padding for readability
+                }) \
+                .applymap(lambda x: 'background-color: #ffcccc' if isinstance(x, (int, float)) and x < 0 else '', subset=['Master PV']) \
+                
+
+            negative_points_before_html = negative_points_before_styled.hide(axis='index').to_html()
+
+            # Identify negative points and apply styling (after prediction)
+            negative_points_after = df_after[df_after['Master PV'] < 0][['Titik', 'Master PV']]
+            negative_points_after_styled = negative_points_after.style \
+                .set_table_attributes('class="table table-bordered table-striped table-hover table-sm"') \
+                .format(precision=2) \
+                .set_properties(**{
+                    'text-align': 'center',
+                    'background-color': '#f9f9f9',
+                    'color': '#333',
+                    'border': '1px solid #ddd',
+                    'padding': '14px'  # Adding padding for readability
+                }) \
+                .applymap(lambda x: 'background-color: #ffcccc' if isinstance(x, (int, float)) and x < 0 else '', subset=['Master PV']) \
+
+            negative_points_after_html = negative_points_after_styled.hide(axis='index').to_html()
+
+
+
             # Plot grafik
             plt.figure(figsize=(12, 6))
             sns.lineplot(x=df['Titik'], y=df['Master PV'], marker='o', label='Current')
             sns.lineplot(x=df_pred['Titik'], y=df_pred['Master PV'], marker='o', label='After Prediction')
+            
+            # Highlight negative points before prediction (current)
+            for titik, pv_value in zip(df['Titik'], df['Master PV']):
+                if pv_value < 0:
+                    plt.plot(titik, pv_value, 'ro')  # Red color for negative points before prediction
+
+            # Highlight negative points after prediction
+            for titik, pv_value in zip(df_pred['Titik'], df_pred['Master PV']):
+                if pv_value < 0:
+                    plt.plot(titik, pv_value, 'rx')  # Red 'x' marker for negative points after prediction
+
+            # Add custom legend for wear warnings (ke-ausan)
+            plt.plot([], [], 'ro', label='Warning: Aus')  # Legend for red circles (current negative points)
+            plt.plot([], [], 'rx', label='Warning After Prediction: Aus')  # Legend for red 'x' (predicted negative points)
+
             plt.title('Grafik Master PV Over Titik')
             plt.xlabel('Titik')
             plt.ylabel('Master PV')
             plt.legend()
+
             # Adding annotation for current distance
             plt.text(0.05, 0.95, f'Jarak Sekarang: {current_distance} km', transform=plt.gca().transAxes,
                     fontsize=12, verticalalignment='top', color='black', bbox=dict(facecolor='white', alpha=0.5))
@@ -200,8 +257,11 @@ def run_test():
                 filename=filename,
                 condition_before_prediction=overall_condition_before,
                 condition_after_prediction=overall_condition_after,
-                predicted_distance = predicted_distance
+                predicted_distance=predicted_distance,
+                negative_points_before_table=negative_points_before_html,
+                negative_points_after_table = negative_points_after_html  # Add negative points text to the template
             )
 
     return render_template('run_test.html')
+
 

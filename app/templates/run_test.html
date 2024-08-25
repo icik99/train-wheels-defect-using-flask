@@ -43,20 +43,33 @@
             </form>                      
             {% if filename %}
                 <div>
-                    <h2 class="text-lg mb-4">File: {{ filename }}</h2>
+                    <h2 class="mb-4">File: {{ filename }}</h2>
                 </div>
             {% endif %}
 
             {% if plot_url_1 %}
                 <div class="mt-6">
-                    <p class="text-lg font-semibold">Analisis Hasil:</p>
-                    <p class="text-lg mt-2">Saat ini, kondisi roda adalah <strong class="underline">{{ condition_before_prediction }}</strong>.</p>
-                    <p class="text-lg mt-2">Berdasarkan prediksi, setelah roda menempuh jarak <strong class="underline">{{ predicted_distance }} kilometer</strong>, kondisi roda akan menjadi <strong class="underline">{{ condition_after_prediction }}</strong>.</p>
-                </div>
-                <div class="mt-6">
-                    <h2 class="text-lg mb-4">Grafik: </h2>
+                    <h2 class="mb-4">Grafik: </h2>
                     <img class="w-[1000px] h-[500px]" src="data:image/png;base64,{{ plot_url_1 }}" alt="Grafik">
                 </div>
+                <div class="mt-6">
+                    <p class="font-semibold text-xl mb-2">Analisis Hasil:</p>
+                    <div class="grid grid-cols-2 gap-5 items-start border-2 border-black rounded-xl px-5 py-3 ">
+                        <div class="">
+                            <p class="mt-2">Saat ini, kondisi roda adalah <strong class="underline">{{ condition_before_prediction }}</strong>. Berikut adalah area yang mengalami keausan:</p>
+                            <div class="w-full">
+                                {{ negative_points_before_table | safe }}
+                            </div>
+                        </div>
+                        <div class="border-l-2 border-black pl-2">
+                            <p class="mt-2">Setelah roda menempuh jarak <strong class="underline">{{ predicted_distance }} kilometer</strong>, kondisinya diperkirakan akan berubah menjadi <strong class="underline">{{ condition_after_prediction }}</strong>. Berdasarkan prediksi, area yang akan mengalami keausan adalah:</p>
+                            <div class="w-full">
+                                {{ negative_points_after_table | safe }}
+                            </div>
+                        </div>
+                    </div>
+                </div>                
+                
             {% endif %}
 
         </div>
