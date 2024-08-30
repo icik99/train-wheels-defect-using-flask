@@ -17,22 +17,13 @@
                     <label class="block mb-1 text-lg font-medium text-gray-700">Jarak Tempuh Roda Saat Ini (dalam Kilometer):</label>
                     <input type="number" name="current_distance" placeholder="Masukkan jarak tempuh roda saat ini (km)" class="appearance-none rounded bg-[#C4C4C433] w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
-                
-                <!-- Input for Predicted Distance -->
                 <div class="w-full">
-                    <label class="block mb-1 text-lg font-medium text-gray-700">Prediksi Jarak yang Akan Ditempuh (dalam Kilometer):</label>
-                    <input type="number" name="predicted_distance" placeholder="Masukkan jarak tempuh yang diprediksi (km)" class="appearance-none rounded bg-[#C4C4C433] w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                </div>
-                
-                <!-- Input for Assumption Decrease -->
-                <div class="w-full">
-                    <label class="block mb-1 text-lg font-medium text-gray-700">Asumsi Penurunan (dalam Persen):</label>
-                    <input type="number" name="assumption_decrease" placeholder="Masukkan persentase penurunan" class="appearance-none rounded bg-[#C4C4C433] w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <label class="block mb-1 text-lg font-medium text-gray-700">Diameter Roda Kereta:</label>
+                    <input type="number" name="diameter_roda" placeholder="Masukkan diameter awal roda kereta (mm)" class="appearance-none rounded bg-[#C4C4C433] w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
                 </div>
                 
                 <!-- Submit Button -->
                  <div class="flex gap-2 items-center">
-                     <!-- <button class="w-full text-[#252525] bg-[#F9C679] w-full text-lg font-semibold py-2 rounded hover:bg-yellow-700"> -->
                          <a href="{{ url_for('main.dashboard') }}" class="w-full text-[#252525] bg-[#F9C679] w-full text-lg font-semibold py-2 text-center rounded hover:bg-yellow-700">Back to Dashboard</a>
                      <!-- </button> -->
                      <button type="submit" class="bg-[#252525] text-[#F9C679] w-full text-lg font-semibold py-2 rounded hover:bg-slate-700 ">
@@ -44,33 +35,36 @@
             {% if filename %}
                 <div>
                     <h2 class="mb-4">File: {{ filename }}</h2>
+                    <h2 class="mb-4 font-semibold">Jarak Tempuh Roda: {{current_distance}} Kilometer</h2>
+                    <h2 class="mb-4 font-semibold">Presentase Penurunan Diameter Roda / Kilometer: {{assumption_decrease}} %</h2>
+                    <h2 class="mb-4 font-semibold">Tanggal beroprasi Roda TS-10: 28 November 2023 - 30 November 2023</h2>
                 </div>
             {% endif %}
 
             {% if plot_url_1 %}
                 <div class="mt-6">
-                    <h2 class="mb-4">Grafik: </h2>
+                    <h2 class="mb-2 font-semibold text-xl mb-2">Grafik: </h2>
                     <img class="w-[1000px] h-[500px]" src="data:image/png;base64,{{ plot_url_1 }}" alt="Grafik">
                 </div>
                 <div class="mt-6">
                     <p class="font-semibold text-xl mb-2">Analisis Hasil:</p>
                     <div class="grid grid-cols-2 gap-5 items-start border-2 border-black rounded-xl px-5 py-3 ">
                         <div class="">
-                            <p class="mt-2">Saat ini, kondisi roda adalah <strong class="underline">{{ condition_before_prediction }}</strong>. Berikut adalah area yang mengalami keausan:</p>
+                            <p class="mt-2 mb-3">Saat ini, kondisi roda adalah <strong class="underline">{{ condition_before_prediction }}</strong>. Berikut adalah area yang mengalami keausan:</p>
                             <div class="w-full">
                                 {{ negative_points_before_table | safe }}
                             </div>
                         </div>
                         <div class="border-l-2 border-black pl-2">
-                            <p class="mt-2">Setelah roda menempuh jarak <strong class="underline">{{ predicted_distance }} kilometer</strong>, kondisinya diperkirakan akan berubah menjadi <strong class="underline">{{ condition_after_prediction }}</strong>. Berdasarkan prediksi, area yang akan mengalami keausan adalah:</p>
+                            <p class="mt-2 mb-3">Setelah roda menempuh jarak <strong class="underline">{{ predicted_distance }} kilometer</strong>, kondisinya diperkirakan akan berubah menjadi <strong class="underline">{{ condition_after_prediction }}</strong>. Berdasarkan prediksi, area yang akan mengalami keausan adalah:</p>
                             <div class="w-full">
                                 {{ negative_points_after_table | safe }}
                             </div>
                         </div>
                     </div>
-                </div>                
-                
+                </div>      
             {% endif %}
+
 
         </div>
     </div>
