@@ -179,6 +179,8 @@ def run_test():
 
         current_distance_str = request.form.get('current_distance', '0')
         diameter_roda_str = request.form.get('diameter_roda', '0')
+        jarakTempuhRodaStr = request.form.get('jarakTempuhRoda', '0')
+        
 
         try:
             current_distance = float(current_distance_str)
@@ -186,93 +188,126 @@ def run_test():
 
             penurunanDiameter = 20 / current_distance
             assumption_decrease = (penurunanDiameter / diameter_roda) * 100
-            penurunanAsumsiDalamDesimal = assumption_decrease / 100 
+            penurunanAsumsiDalamDesimal = assumption_decrease / 100
 
             # Menentukan ambang batas untuk membulatkan nilai
             batas = 0.01
             if penurunanAsumsiDalamDesimal < batas:
-                penurunanAsumsiDalamDesimal = math.ceil(penurunanAsumsiDalamDesimal * 100) / 100  # Membulatkan ke atas dengan 2 desimal
+                penurunanAsumsiDalamDesimal = 0.01
+
         except ValueError:
             flash('Invalid input for distance or wheel diameter.')
             return redirect(request.url)
 
         filename = file.filename
 
-        if file:
-            df = pd.read_csv(file)  # Use CSV reading instead of Excel for simplicity
-
-            # Membuat label kondisi sebelum (misalnya, menggunakan Sisi 1 sebagai contoh)
-            df['Condition_Before'] = df['Sisi 1'].apply(lambda x: 'Bagus' if x >= 0 else 'Aus')
-
-            # Membagi dataset menjadi fitur (X) dan label (y)
-            X = df[['Titik', 'Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']]
-            y = df['Condition_Before']
-
-            # Membagi data menjadi data training dan data uji
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-            # Inisialisasi dan melatih model KNN
-            knn = KNeighborsClassifier(n_neighbors=3)
-            knn.fit(X_train, y_train)
-
-            threshold = 1e-10  # Threshold untuk menganggap nilai sangat kecil sebagai nol
-
-            def determine_condition(series):
-                nilai_positif = (series >= 0).sum()
-                nilai_negatif = (series < 0).sum()
-                return 'Bagus' if nilai_positif >= nilai_negatif else 'Aus'
-
-            for sisi in ['Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']:
-                df_pred = df.copy()
-                predicted_distance = current_distance
-                max_iterations = 9999999
-                iteration = 0
-
+        try:
+            if file:
+                try:
+                    df = pd.read_csv(file)  # Membaca CSV
+                except FileNotFoundError:
+                    return "File tidak ditemukan. Pastikan file diunggah dengan benar."
+                except pd.errors.EmptyDataError:
+                    return "File CSV kosong. Mohon unggah file yang valid."
+                except pd.errors.ParserError:
+                    return "Terjadi kesalahan saat membaca file. Pastikan format CSV sudah benar."
                 
-                while iteration < max_iterations:
-                    df_pred[sisi] = (df_pred[sisi] - (df[sisi].abs() * penurunanAsumsiDalamDesimal)).round(2)
-                    
-                    # Mengganti nilai yang sangat kecil menjadi nol
-                    df_pred[sisi] = np.where(np.abs(df_pred[sisi]) < threshold, 0, df_pred[sisi])
-                    
-                    nilaiPositifSetelahPrediksi = (df_pred[sisi] >= 0).sum()
-                    nilaiNegatifSetelahPrediksi = (df_pred[sisi] < 0).sum()
-
-                    if nilaiNegatifSetelahPrediksi > nilaiPositifSetelahPrediksi:
-                        break
-
-                    predicted_distance += 1
-                    iteration += 1
-
-                # Membulatkan nilai asli dan nilai prediksi dengan 2 angka di belakang koma
-                df[sisi] = df[sisi].round(2)
-                df_pred[sisi] = df_pred[sisi].round(2)
-
-                # Prediksi kondisi sebelum menggunakan KNN
-                conditions_before[sisi] = 'Bagus' if (df[sisi] >= 0).sum() >= (df[sisi] < 0).sum() else 'Aus'
+                try:
+                    # Membuat label kondisi sebelum (misalnya, menggunakan Sisi 1 sebagai contoh)
+                    df['Condition_Before'] = df['Sisi 1'].apply(lambda x: 'Bagus' if x >= 0 else 'Aus')
+                except KeyError as e:
+                    return f"Kolom yang diminta tidak ditemukan: {e}. Pastikan CSV memiliki kolom yang benar."
                 
-                # Menentukan kondisi sebelum dan setelah prediksi
-                conditions_before[sisi] = determine_condition(df[sisi])
-                conditions_after[sisi] = determine_condition(df_pred[sisi])
+                try:
+                    # Membagi dataset menjadi fitur (X) dan label (y)
+                    X = df[['Titik', 'Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']]
+                    y = df['Condition_Before']
 
-                predicted_distances[sisi] = predicted_distance
-                
-                print(df_pred[sisi])
-                # Ambil nilai-nilai negatif
-                negative_values[sisi] = df_pred[df_pred[sisi] < 0].copy()
-                negative_values[sisi]['Titik'] = negative_values[sisi]['Titik'].astype(int)
+                    # Membagi data menjadi data training dan data uji
+                    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+                except KeyError as e:
+                    return f"Terjadi kesalahan saat membagi dataset: {e}. Pastikan kolom yang dibutuhkan ada di dataset."
+                except ValueError as e:
+                    return f"Terjadi kesalahan saat membagi dataset: {e}. Pastikan data cukup untuk dibagi menjadi data training dan testing."
 
-                x_current = df['Titik']
-                y_current = df[sisi]
-                x_pred = df_pred['Titik']
-                y_pred = df_pred[sisi]
-                
-                graphs_urls[sisi] = create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance)
+                try:
+                    # Inisialisasi dan melatih model KNN
+                    knn = KNeighborsClassifier(n_neighbors=3)
+                    knn.fit(X_train, y_train)
+                except Exception as e:
+                    return f"Terjadi kesalahan saat melatih model KNN: {str(e)}"
 
-    print("Kondisi Sebelum:")
-    print(conditions_before)
-    print("Kondisi Setelah Prediksi:")
-    print(conditions_after)
+                threshold = 1e-10  # Threshold untuk menganggap nilai sangat kecil sebagai nol
+
+                def determine_condition(series):
+                    nilai_positif = (series >= 0).sum()
+                    nilai_negatif = (series < 0).sum()
+                    return 'Bagus' if nilai_positif >= nilai_negatif else 'Aus'
+
+                for sisi in ['Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']:
+                    df_pred = df.copy()
+                    predicted_distance = current_distance
+                    max_iterations = 8000
+                    iteration = 0
+                    print('menghitung', sisi + '....')
+
+                    try:
+                        while iteration < max_iterations:
+                            df_pred[sisi] = (df_pred[sisi] - (df[sisi].abs() * penurunanAsumsiDalamDesimal)).round(2)
+                            
+                            # Mengganti nilai yang sangat kecil menjadi nol
+                            df_pred[sisi] = np.where(np.abs(df_pred[sisi]) < threshold, 0, df_pred[sisi])
+                            
+                            
+
+                            nilaiPositifSetelahPrediksi = (df_pred[sisi] >= 0).sum()
+                            nilaiNegatifSetelahPrediksi = (df_pred[sisi] < 0).sum()
+
+                            if nilaiNegatifSetelahPrediksi > nilaiPositifSetelahPrediksi:
+                                print(sisi, 'berhasil di hitung')
+                                break
+
+                            if (df_pred[sisi] <= -10).any():
+                                print(f"Ada nilai {sisi} yang mencapai -10 atau kurang. Menghentikan perulangan.")
+                                break
+
+                            predicted_distance += 1
+                            iteration += 1
+                            print('Menghitung ' + sisi + ' | Prediksi Jarak = ' , predicted_distance, ' Kilometer')
+                    except Exception as e:
+                        return f"Terjadi kesalahan saat menghitung prediksi pada {sisi}: {str(e)}"
+
+                    try:
+                        # Membulatkan nilai asli dan nilai prediksi dengan 2 angka di belakang koma
+                        df[sisi] = df[sisi].round(2)
+                        df_pred[sisi] = df_pred[sisi].round(2)
+
+                        # Prediksi kondisi sebelum menggunakan KNN
+                        conditions_before[sisi] = 'Bagus' if (df[sisi] >= 0).sum() >= (df[sisi] < 0).sum() else 'Aus'
+                        
+                        # Menentukan kondisi sebelum dan setelah prediksi
+                        conditions_before[sisi] = determine_condition(df[sisi])
+                        conditions_after[sisi] = determine_condition(df_pred[sisi])
+
+                        predicted_distances[sisi] = predicted_distance
+                        # Ambil nilai-nilai negatif
+                        negative_values[sisi] = df_pred[df_pred[sisi] < 0].copy()
+                        negative_values[sisi]['Titik'] = negative_values[sisi]['Titik'].astype(int)
+
+                        x_current = df['Titik']
+                        y_current = df[sisi]
+                        x_pred = df_pred['Titik']
+                        y_pred = df_pred[sisi]
+                        
+                        graphs_urls[sisi] = create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance)
+                    except KeyError as e:
+                        return f"Kolom yang diminta tidak ditemukan: {e}. Pastikan semua kolom yang dibutuhkan ada di dataset."
+                    except Exception as e:
+                        return f"Terjadi kesalahan dalam proses perhitungan atau plotting: {str(e)}"
+        except Exception as e:
+            return f"Terjadi kesalahan yang tidak terduga: {str(e)}"
+
+
     return render_template(
         'run_test.html',
         graphs_urls=graphs_urls,
@@ -281,7 +316,7 @@ def run_test():
         conditions_after=conditions_after,
         predicted_distances=predicted_distances,
         current_distance=current_distance,
-        assumption_decrease=penurunanAsumsiDalamDesimal,
+        assumption_decrease=assumption_decrease,
         negative_values = negative_values
     )
 
