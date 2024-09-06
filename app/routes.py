@@ -33,6 +33,7 @@ def login_required(f):
 def home():
     return render_template('home.html')
 
+# Register
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -58,6 +59,8 @@ def register():
 
     return render_template('register.html', form=form)
 
+
+# Fungsi Untuk Login
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -75,6 +78,7 @@ def login():
     return render_template('login.html', form=form)
 
 @main.route('/logout')
+
 @login_required
 def logout():
     session.clear()
@@ -87,6 +91,7 @@ def dashboard():
     return render_template('dashboard.html')
 
 @main.route('/about')
+@login_required
 def about():
     return render_template('about.html')
 
@@ -98,10 +103,10 @@ def history():
 
 
 @main.route('/run_test', methods=['GET', 'POST'])
+@login_required
 def run_test():
 
-    
-
+    # Fungsi untuk Visualisasi Grafik
     def create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance):
         plt.figure(figsize=(12, 6))
 
@@ -168,6 +173,7 @@ def run_test():
     penurunanAsumsiDalamDesimal = None
 
     if request.method == 'POST':
+        # Untuk Nangkap Inputan dari Halaman Run Test (Csv, Jarak Tempuh Roda Sekarang, dan Diameter Roda)
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
@@ -179,13 +185,12 @@ def run_test():
 
         current_distance_str = request.form.get('current_distance', '0')
         diameter_roda_str = request.form.get('diameter_roda', '0')
-        jarakTempuhRodaStr = request.form.get('jarakTempuhRoda', '0')
         
-
         try:
             current_distance = float(current_distance_str)
             diameter_roda = float(diameter_roda_str)
 
+            # Rumus Asumsi Penurunan Per Kilometer
             penurunanDiameter = 20 / current_distance
             assumption_decrease = (penurunanDiameter / diameter_roda) * 100
             penurunanAsumsiDalamDesimal = assumption_decrease / 100
@@ -223,7 +228,7 @@ def run_test():
                     X = df[['Titik', 'Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']]
                     y = df['Condition_Before']
 
-                    # Membagi data menjadi data training dan data uji
+                    # Membagi data menjadi data training dan data uji, Data Training sebanyak 80%, dan data uji sebanyak 20%
                     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
                 except KeyError as e:
                     return f"Terjadi kesalahan saat membagi dataset: {e}. Pastikan kolom yang dibutuhkan ada di dataset."
@@ -239,25 +244,29 @@ def run_test():
 
                 threshold = 1e-10  # Threshold untuk menganggap nilai sangat kecil sebagai nol
 
+                # Fungsi untuk memeriksa, apakah titik tergolong aus atau bagus
                 def determine_condition(series):
                     nilai_positif = (series >= 0).sum()
                     nilai_negatif = (series < 0).sum()
                     return 'Bagus' if nilai_positif >= nilai_negatif else 'Aus'
 
+                # Perhitungan Prediksi Jarak Tempuh
                 for sisi in ['Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']:
                     df_pred = df.copy()
-                    predicted_distance = current_distance
+                    predicted_distance = current_distance # ini inisasi awal jarak prediksi
                     max_iterations = 8000
                     iteration = 0
                     print('menghitung', sisi + '....')
 
                     try:
-                        while iteration < max_iterations:
-                            df_pred[sisi] = (df_pred[sisi] - (df[sisi].abs() * penurunanAsumsiDalamDesimal)).round(2)
+
+                        while iteration < max_iterations: #Perulangan akan terus jalan sampai iterasi maksimal
+
+                            # Perhitungan untuk mengurangi nilai pv yang ada, dengan asumsi penurunan per kilometer.
+                            df_pred[sisi] = (df_pred[sisi] - (df[sisi].abs() * penurunanAsumsiDalamDesimal))
                             
                             # Mengganti nilai yang sangat kecil menjadi nol
                             df_pred[sisi] = np.where(np.abs(df_pred[sisi]) < threshold, 0, df_pred[sisi])
-                            
                             
 
                             nilaiPositifSetelahPrediksi = (df_pred[sisi] >= 0).sum()
@@ -307,7 +316,7 @@ def run_test():
         except Exception as e:
             return f"Terjadi kesalahan yang tidak terduga: {str(e)}"
 
-
+    # ini untuk return / mengembalikan nilai hasil perhitungan dan prediksi ke website
     return render_template(
         'run_test.html',
         graphs_urls=graphs_urls,
