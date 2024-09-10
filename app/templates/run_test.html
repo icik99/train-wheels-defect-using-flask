@@ -40,8 +40,10 @@
                     <p class="text-lg mb-2"><strong>Presentase Penurunan Diameter Roda / Kilometer:</strong> {{assumption_decrease}} %</p>
                 {% endif %}
                 
+                {% if average_predicted_distance %}
+                    <p class="text-lg mb-2"><strong>Prediksi Jarak Tempuh Roda Ini: </strong> {{ average_predicted_distance }} Kilometer</p>
+                {% endif %}
 
-                <p class="text-lg mb-2"><strong>Prediksi Jarak Tempuh Roda Ini: </strong> {{ average_predicted_distance }} Kilometer</p>
                 <p class="text-lg mb-4"><strong>Tanggal beroprasi Roda TS-10:</strong> 28 November 2023 - 30 November 2023</p>
             </div>
 

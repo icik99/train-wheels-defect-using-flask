@@ -175,6 +175,10 @@ def run_test():
     assumption_decrease = None
     penurunanAsumsiDalamDesimal = None
 
+    # Tambahkan variabel untuk menyimpan total jarak prediksi
+    total_predicted_distance = 0
+    jumlah_sisi = 4  # Karena ada 4 sisi
+    average_predicted_distance = 0
 
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -205,9 +209,7 @@ def run_test():
 
         filename = file.filename
 
-        # Tambahkan variabel untuk menyimpan total jarak prediksi
-        total_predicted_distance = 0
-        jumlah_sisi = 4  # Karena ada 4 sisi
+        
 
         try:
             if file:
@@ -221,7 +223,7 @@ def run_test():
                     return "Terjadi kesalahan saat membaca file. Pastikan format CSV sudah benar."
 
                 threshold = 1e-10
-
+                
                 # Menggunakan SVR untuk Prediksi Jarak Tempuh
                 for sisi in ['Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']:
                     df_pred = df.copy()
@@ -292,6 +294,8 @@ def run_test():
                     except Exception as e:
                         return f"Terjadi kesalahan dalam proses perhitungan atau plotting: {str(e)}"
 
+            # Pastikan total_predicted_distance hanya dihitung jika setidaknya satu prediksi berhasil
+            if total_predicted_distance > 0:
                 average_predicted_distance = round(total_predicted_distance / jumlah_sisi, 2)
 
         except Exception as e:
