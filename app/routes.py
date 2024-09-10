@@ -16,6 +16,8 @@ from werkzeug.security import generate_password_hash
 import numpy as np
 from scipy.interpolate import make_interp_spline
 import math
+from sklearn.svm import SVR
+from sklearn.metrics import mean_squared_error
 
 main = Blueprint('main', __name__)
 
@@ -100,14 +102,8 @@ def about():
 def history():
     return render_template('history.html')
 
+def create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance):
 
-
-@main.route('/run_test', methods=['GET', 'POST'])
-@login_required
-def run_test():
-
-    # Fungsi untuk Visualisasi Grafik
-    def create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance):
         plt.figure(figsize=(12, 6))
 
         # Interpolasi dengan spline untuk membuat kurva lebih halus
@@ -160,7 +156,14 @@ def run_test():
         plt.close()
 
         return base64.b64encode(img.getvalue()).decode()
+def determine_condition(series):
+                    nilai_positif = (series >= 0).sum()
+                    nilai_negatif = (series < 0).sum()
+                    return 'Bagus' if nilai_positif >= nilai_negatif else 'Aus'
 
+@main.route('/run_test', methods=['GET', 'POST'])
+@login_required
+def run_test():
 
     conditions_before = {}
     conditions_after = {}
@@ -172,8 +175,8 @@ def run_test():
     assumption_decrease = None
     penurunanAsumsiDalamDesimal = None
 
+
     if request.method == 'POST':
-        # Untuk Nangkap Inputan dari Halaman Run Test (Csv, Jarak Tempuh Roda Sekarang, dan Diameter Roda)
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
@@ -185,7 +188,7 @@ def run_test():
 
         current_distance_str = request.form.get('current_distance', '0')
         diameter_roda_str = request.form.get('diameter_roda', '0')
-        
+
         try:
             current_distance = float(current_distance_str)
             diameter_roda = float(diameter_roda_str)
@@ -195,10 +198,6 @@ def run_test():
             assumption_decrease = (penurunanDiameter / diameter_roda) * 100
             penurunanAsumsiDalamDesimal = assumption_decrease / 100
 
-            # Menentukan ambang batas untuk membulatkan nilai
-            batas = 0.01
-            if penurunanAsumsiDalamDesimal < batas:
-                penurunanAsumsiDalamDesimal = 0.01
 
         except ValueError:
             flash('Invalid input for distance or wheel diameter.')
@@ -209,97 +208,69 @@ def run_test():
         try:
             if file:
                 try:
-                    df = pd.read_csv(file)  # Membaca CSV
+                    df = pd.read_csv(file)
                 except FileNotFoundError:
                     return "File tidak ditemukan. Pastikan file diunggah dengan benar."
                 except pd.errors.EmptyDataError:
                     return "File CSV kosong. Mohon unggah file yang valid."
                 except pd.errors.ParserError:
                     return "Terjadi kesalahan saat membaca file. Pastikan format CSV sudah benar."
-                
-                try:
-                    # Membuat label kondisi sebelum (misalnya, menggunakan Sisi 1 sebagai contoh)
-                    df['Condition_Before'] = df['Sisi 1'].apply(lambda x: 'Bagus' if x >= 0 else 'Aus')
-                except KeyError as e:
-                    return f"Kolom yang diminta tidak ditemukan: {e}. Pastikan CSV memiliki kolom yang benar."
-                
-                try:
-                    # Membagi dataset menjadi fitur (X) dan label (y)
-                    X = df[['Titik', 'Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']]
-                    y = df['Condition_Before']
 
-                    # Membagi data menjadi data training dan data uji, Data Training sebanyak 80%, dan data uji sebanyak 20%
-                    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-                except KeyError as e:
-                    return f"Terjadi kesalahan saat membagi dataset: {e}. Pastikan kolom yang dibutuhkan ada di dataset."
-                except ValueError as e:
-                    return f"Terjadi kesalahan saat membagi dataset: {e}. Pastikan data cukup untuk dibagi menjadi data training dan testing."
+                threshold = 1e-10
 
-                try:
-                    # Inisialisasi dan melatih model KNN
-                    knn = KNeighborsClassifier(n_neighbors=3)
-                    knn.fit(X_train, y_train)
-                except Exception as e:
-                    return f"Terjadi kesalahan saat melatih model KNN: {str(e)}"
-
-                threshold = 1e-10  # Threshold untuk menganggap nilai sangat kecil sebagai nol
-
-                # Fungsi untuk memeriksa, apakah titik tergolong aus atau bagus
-                def determine_condition(series):
-                    nilai_positif = (series >= 0).sum()
-                    nilai_negatif = (series < 0).sum()
-                    return 'Bagus' if nilai_positif >= nilai_negatif else 'Aus'
-
-                # Perhitungan Prediksi Jarak Tempuh
+                # Menggunakan SVR untuk Prediksi Jarak Tempuh
                 for sisi in ['Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']:
                     df_pred = df.copy()
-                    predicted_distance = current_distance # ini inisasi awal jarak prediksi
-                    max_iterations = 8000
+                    predicted_distance = current_distance
+                    max_iterations = 10000
                     iteration = 0
-                    print('menghitung', sisi + '....')
+                    print('Menghitung', sisi + '....')
 
                     try:
+                        # Persiapan data untuk SVR
+                        X = df[['Titik']].values
+                        y = df[sisi].values
 
-                        while iteration < max_iterations: #Perulangan akan terus jalan sampai iterasi maksimal
+                        svr_model = SVR(kernel='rbf')
+                        svr_model.fit(X, y)  # Melatih model SVR
 
-                            # Perhitungan untuk mengurangi nilai pv yang ada, dengan asumsi penurunan per kilometer.
-                            df_pred[sisi] = (df_pred[sisi] - (df[sisi].abs() * penurunanAsumsiDalamDesimal))
+                        while iteration < max_iterations:
+                            # Prediksi nilai dengan SVR
+                            df_pred[sisi] = svr_model.predict(X)
                             
-                            # Mengganti nilai yang sangat kecil menjadi nol
-                            df_pred[sisi] = np.where(np.abs(df_pred[sisi]) < threshold, 0, df_pred[sisi])
+                            penurunan_dinamis = (predicted_distance - current_distance) * penurunanAsumsiDalamDesimal
+                            df_pred[sisi] = df_pred[sisi] - penurunan_dinamis
                             
 
-                            nilaiPositifSetelahPrediksi = (df_pred[sisi] >= 0).sum()
-                            nilaiNegatifSetelahPrediksi = (df_pred[sisi] < 0).sum()
+                            nilai_positif_setelah_prediksi = (df_pred[sisi] >= 0).sum()
+                            nilai_negatif_setelah_prediksi = (df_pred[sisi] < 0).sum()
 
-                            if nilaiNegatifSetelahPrediksi > nilaiPositifSetelahPrediksi:
-                                print(sisi, 'berhasil di hitung')
-                                break
+                            if nilai_negatif_setelah_prediksi > nilai_positif_setelah_prediksi:
+                                print(sisi, 'berhasil dihitung')
+                                print('---------------------------')
+                                print('Df Asli:')
+                                print(df[sisi])
+                                print('Df Prediksi:')
+                                print(df_pred[sisi])
 
-                            if (df_pred[sisi] <= -10).any():
-                                print(f"Ada nilai {sisi} yang mencapai -10 atau kurang. Menghentikan perulangan.")
                                 break
 
                             predicted_distance += 1
                             iteration += 1
-                            print('Menghitung ' + sisi + ' | Prediksi Jarak = ' , predicted_distance, ' Kilometer')
-                    except Exception as e:
-                        return f"Terjadi kesalahan saat menghitung prediksi pada {sisi}: {str(e)}"
+                            print('Menghitung ' + sisi + ' | Prediksi Jarak = ', predicted_distance, ' Kilometer')
 
-                    try:
-                        # Membulatkan nilai asli dan nilai prediksi dengan 2 angka di belakang koma
+                        # Hitung MSE untuk model SVR
+                        mse = mean_squared_error(y, df_pred[sisi])
+                        print(f'Mean Squared Error (MSE):', mse)
+
+                        # Membulatkan nilai asli dan prediksi
                         df[sisi] = df[sisi].round(2)
                         df_pred[sisi] = df_pred[sisi].round(2)
 
-                        # Prediksi kondisi sebelum menggunakan KNN
-                        conditions_before[sisi] = 'Bagus' if (df[sisi] >= 0).sum() >= (df[sisi] < 0).sum() else 'Aus'
-                        
-                        # Menentukan kondisi sebelum dan setelah prediksi
                         conditions_before[sisi] = determine_condition(df[sisi])
-                        conditions_after[sisi] = determine_condition(df_pred[sisi])
+                        conditions_after[sisi] = 'Aus'
 
                         predicted_distances[sisi] = predicted_distance
-                        # Ambil nilai-nilai negatif
                         negative_values[sisi] = df_pred[df_pred[sisi] < 0].copy()
                         negative_values[sisi]['Titik'] = negative_values[sisi]['Titik'].astype(int)
 
@@ -307,14 +278,16 @@ def run_test():
                         y_current = df[sisi]
                         x_pred = df_pred['Titik']
                         y_pred = df_pred[sisi]
-                        
+
                         graphs_urls[sisi] = create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance)
+
                     except KeyError as e:
                         return f"Kolom yang diminta tidak ditemukan: {e}. Pastikan semua kolom yang dibutuhkan ada di dataset."
                     except Exception as e:
                         return f"Terjadi kesalahan dalam proses perhitungan atau plotting: {str(e)}"
         except Exception as e:
             return f"Terjadi kesalahan yang tidak terduga: {str(e)}"
+
 
     # ini untuk return / mengembalikan nilai hasil perhitungan dan prediksi ke website
     return render_template(
