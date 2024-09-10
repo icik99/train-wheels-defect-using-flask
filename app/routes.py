@@ -143,8 +143,8 @@ def create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, pr
                 fontsize=12, verticalalignment='top', color='black', bbox=dict(facecolor='white', alpha=0.5))
 
         # Adding annotation for predicted distance
-        plt.text(0.05, 0.90, f'Jarak Prediksi Akan Terjadi Aus: {predicted_distance} km', transform=plt.gca().transAxes,
-                fontsize=12, verticalalignment='top', color='black', bbox=dict(facecolor='white', alpha=0.5))
+        # plt.text(0.05, 0.90, f'Jarak Prediksi Akan Terjadi Aus: {predicted_distance} km', transform=plt.gca().transAxes,
+        #         fontsize=12, verticalalignment='top', color='black', bbox=dict(facecolor='white', alpha=0.5))
 
         plt.gca().margins(x=0.05, y=0.15)
         plt.tight_layout()
@@ -204,6 +204,10 @@ def run_test():
             return redirect(request.url)
 
         filename = file.filename
+
+        # Tambahkan variabel untuk menyimpan total jarak prediksi
+        total_predicted_distance = 0
+        jumlah_sisi = 4  # Karena ada 4 sisi
 
         try:
             if file:
@@ -281,13 +285,19 @@ def run_test():
 
                         graphs_urls[sisi] = create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance)
 
+                        total_predicted_distance += predicted_distance
+
                     except KeyError as e:
                         return f"Kolom yang diminta tidak ditemukan: {e}. Pastikan semua kolom yang dibutuhkan ada di dataset."
                     except Exception as e:
                         return f"Terjadi kesalahan dalam proses perhitungan atau plotting: {str(e)}"
+
+                average_predicted_distance = round(total_predicted_distance / jumlah_sisi, 2)
+
         except Exception as e:
             return f"Terjadi kesalahan yang tidak terduga: {str(e)}"
 
+        # Hitung rata-rata predicted_distance
 
     # ini untuk return / mengembalikan nilai hasil perhitungan dan prediksi ke website
     return render_template(
@@ -299,7 +309,8 @@ def run_test():
         predicted_distances=predicted_distances,
         current_distance=current_distance,
         assumption_decrease=assumption_decrease,
-        negative_values = negative_values
+        negative_values = negative_values,
+        average_predicted_distance=average_predicted_distance
     )
 
     return render_template('run_test.html')
