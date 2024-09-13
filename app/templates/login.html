@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}Login{% endblock %}
 {% block content %}
-    <div class="flex bg-white">
-        <img class="mb-2 w-[1093px] " src="{{ url_for('static', filename='images/base.png') }}" alt="Deskripsi Gambar">
+    <div class="flex flex-col md:flex-row bg-white">
+        <img class="mb-2 w-full md:w-1/2 lg:w-[850px] object-cover" src="{{ url_for('static', filename='images/base.png') }}" alt="Deskripsi Gambar">
         <div class="w-full min-h-screen bg-white p-6 rounded shadow-md">
             <div class="mb-20">
                 <div class="flex items-center justify-center">
@@ -14,11 +14,11 @@
             <form method="POST" action="{{ url_for('main.login') }}" class="bg-white space-y-[25px]">
                 {{ form.hidden_tag() }}
                 <div class="">
-                    <input id="email" type="email" name="email" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:undeline" placeholder="Enter your email...">
+                    <input id="email" type="email" name="email" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Enter your email...">
                 </div>
                 
                 <div class="">
-                    <input id="password" type="password" name="password" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:undeline" placeholder="Password...">
+                    <input id="password" type="password" name="password" class="appearance-none rounded bg-[#C4C4C433] w-full py-[17px] px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline placeholder:underline" placeholder="Password...">
                 </div>
                 
                 <div class="mb-4">
@@ -28,10 +28,10 @@
                 </div>
                 <div class="flex gap-2 items-center justify-center">
                     <h1 class="underline">New member?</h1>
-                    <a href="{{ url_for('main.register') }}"  class="text-[#F9C679] font-bold">Register Now</a>
+                    <a href="{{ url_for('main.register') }}" class="text-[#F9C679] font-bold">Register Now</a>
                 </div>
-                
             </form>
         </div>
     </div>
+
 {% endblock %}

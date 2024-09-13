@@ -2,11 +2,11 @@
 {% extends 'base.html' %}
 {% block title %}About Us{% endblock %}
 {% block content %}
-    <div class="min-h-screen bg-cover flex items-center justify-center" style="background-image: url('{{ url_for('static', filename='images/base.png') }}')">
-        <div class="flex flex-col items-center justify-center ">
-            <h1 class="border-b-2 w-fit font-bold text-center text-white text-9xl mb-5 ">About Us</h1>
-            <p class="text-4xl text-white font-semibold text-center mb-20">Smar+Pars adalah Aplikasi yang bertujuan untuk meningkatkan keselamatan operasional kereta dan mengurangi risiko gangguan dengan memberikan pemantauan dan peringatan dini terhadap kondisi roda.</p>
-            <a href="{{ url_for('main.dashboard') }}" class="bg-[#252525] text-[#F9C679]  text-2xl font-semibold py-4 px-12 rounded underline hover:bg-slate-700">Back to Dashboard</a>
+    <div class="min-h-screen bg-cover flex items-center justify-center p-6" style="background-image: url('{{ url_for('static', filename='images/base.png') }}')">
+        <div class="flex flex-col items-center justify-center text-center max-w-4xl">
+            <h1 class="border-b-2 w-fit font-bold text-white text-4xl sm:text-6xl md:text-8xl lg:text-9xl mb-5">About Us</h1>
+            <p class="text-lg sm:text-2xl md:text-3xl lg:text-4xl text-white font-semibold mb-10 sm:mb-16 md:mb-20">Smar+Pars adalah Aplikasi yang bertujuan untuk meningkatkan keselamatan operasional kereta dan mengurangi risiko gangguan dengan memberikan pemantauan dan peringatan dini terhadap kondisi roda.</p>
+            <a href="{{ url_for('main.dashboard') }}" class="bg-[#252525] text-[#F9C679] text-lg sm:text-xl md:text-2xl font-semibold py-3 px-8 sm:py-4 sm:px-10 md:py-4 md:px-12 rounded underline hover:bg-slate-700">Back to Dashboard</a>
         </div>
     </div>
 {% endblock %}

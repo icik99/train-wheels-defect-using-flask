@@ -2,36 +2,126 @@
 {% block title %}Run Test{% endblock %}
 {% block content %}
     <div class="min-h-screen bg-cover bg-center py-10 px-10" style="background-image: url('{{ url_for('static', filename='images/base.png') }}')">
-        <h1 class="border-b-2 w-fit font-bold text-center text-white text-9xl mb-5">Run Test</h1>
         
-        <form action="{{ url_for('main.run_test') }}" method="post" enctype="multipart/form-data" class="mb-6">
-            <label class="block mb-2 text-lg text-white font-medium text-gray-700">Upload CSV File:</label>
-            <input type="file" name="file" class="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none">
-            <button type="submit" class="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700">
-                Upload and Analyze
-            </button>
-        </form>
-        <div class="bg-white p-3 rounded-lg">
+        <h1 class="border-b-2 w-fit font-bold text-center text-white text-9xl mb-5">Run Test</h1>
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <form action="{{ url_for('main.run_test') }}" method="post" enctype="multipart/form-data" class="space-y-6">
+                <!-- Input for CSV File -->
+                <div class="w-full">
+                    <label class="block mb-2 text-lg font-medium text-gray-700">Unggah File CSV:</label>
+                    <input type="file" name="file" class="block w-full px-3 py-2 border border-gray-300 rounded bg-[#C4C4C433] text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F9C679] focus:border-transparent">
+                </div>
+                
+                <!-- Input for Current Distance -->
+                <div class="w-full">
+                    <label class="block mb-2 text-lg font-medium text-gray-700">Jarak Tempuh Roda Saat Ini (dalam Kilometer):</label>
+                    <input  name="current_distance" placeholder="Masukkan jarak tempuh roda saat ini (km)" class="block w-full px-3 py-2 border border-gray-300 rounded bg-[#C4C4C433] text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F9C679] focus:border-transparent">
+                </div>
+                
+                <!-- Input for Diameter Roda -->
+                <div class="w-full">
+                    <label class="block mb-2 text-lg font-medium text-gray-700">Diameter Roda Kereta:</label>
+                    <input type="number" name="diameter_roda" placeholder="Masukkan diameter awal roda kereta (mm)" class="block w-full px-3 py-2 border border-gray-300 rounded bg-[#C4C4C433] text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F9C679] focus:border-transparent">
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="flex gap-2 items-center">
+                    <a href="{{ url_for('main.dashboard') }}" class="bg-[#F9C679] text-[#252525] w-full text-lg font-semibold py-2 rounded hover:bg-yellow-700 text-center">Back to Dashboard</a>
+                    <button type="submit" class="bg-[#252525] text-[#F9C679] w-full text-lg font-semibold py-2 rounded hover:bg-slate-700">Unggah dan Analisis</button>
+                </div>
+            </form>                      
 
-            {% if table_data %}
-                <div>
-                    <h2 class="text-lg mb-4">File {{ filename }}</h2>
-                    <div class="text-end">
-                        <!-- {{ table_data|safe }} -->
+            {% if filename %}
+
+            <div class="mt-6">
+                <h2 class="text-xl font-semibold mb-4">File: {{ filename }}</h2>
+                <p class="text-lg mb-2"><strong>Jarak Tempuh Roda:</strong> {{current_distance}} Kilometer</p>
+                {% if assumption_decrease %}
+                    <p class="text-lg mb-2"><strong>Presentase Penurunan Diameter Roda / Kilometer:</strong> {{assumption_decrease}} %</p>
+                {% endif %}
+                
+                {% if average_predicted_distance %}
+                    <p class="text-lg mb-2"><strong>Prediksi Jarak Tempuh Roda Ini: </strong> {{ average_predicted_distance }} Kilometer</p>
+                {% endif %}
+
+                <p class="text-lg mb-4"><strong>Tanggal beroprasi Roda TS-10:</strong> 28 November 2023 - 30 November 2023</p>
+            </div>
+
+
+            {% for sisi, condition_before in conditions_before.items() %}
+                <div class="results mt-6 grid grid-cols-2 gap-10">
+                    <div>
+                        <h2 class="text-2xl font-semibold mb-2">{{ sisi }}</h2>
+                        
+                        <div class="graph mb-4">
+                            <img src="data:image/png;base64,{{ graphs_urls[sisi] }}" alt="Graph for {{ sisi }}" class="w-full h-auto border border-gray-300 rounded">
+                        </div>
+                        <!-- Display Conditions Before and After Prediction -->
+                        <p class="mb-2"><strong>Hasil Analisis:</strong></p>
+                        <p class="mb-2">Kondisi roda sekarang berada dalam keadaan: <strong>{{ condition_before }}</strong> </p>
+                        <!-- Display Predicted Distance -->
+                        <p class="mb-4">Kondisi Roda akan menjadi <strong>{{ conditions_after[sisi] }}</strong>  setelah menempuh jarak: <strong>{{ average_predicted_distance }} Kilometer</strong> <br/> berdasarkan prediksi, area yang akan mengalami ke-ausan antara lain:</p>
+                        
+                        <!-- Display Negative Values for Each Side -->
+                        <div class="negative-values">
+                            {% if negative_values[sisi].empty %}
+                                <p>Tidak ada nilai negatif untuk {{ sisi }}.</p>
+                            {% else %}
+                                <table class="border-2 w-fit">
+                                    <tr class="border-b-2">
+                                        <th class="font-semibold text-lg px-5 text-center border">Titik</th>
+                                        <th class="font-semibold text-lg px-5 text-center border">{{ sisi }}</th>
+                                    </tr>
+                                    {% for index, row in negative_values[sisi].iterrows() %}
+                                        <tr>
+                                            <td class="px-5 text-center py-2 border-b border">{{ row['Titik'] }}</td>
+                                            <td class="px-5 text-center py-2 border-b bg-red-300 border">{{ row[sisi] }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </table>
+                            {% endif %}
+                        </div>
+                        
+                        <hr class="my-4">
                     </div>
                 </div>
+            {% endfor %}
+
+            <div class=" text-gray-800 w-full">
+                <div class="container w-full">
+                    <div class="bg-white shadow-lg rounded-lg py-8 px-2">
+                        <h2 class="text-2xl font-bold  mb-4">Analisis Faktor yang Mempengaruhi Keausan Roda Kereta</h2>
+                        
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2"></h3>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">1. Jarak yang Ditempuh</h3>
+                        <ul class="list-disc list-inside mb-4 text-gray-600">
+                            <li><strong class="font-semibold">Frekuensi Penggunaan:</strong> Semakin sering roda digunakan, semakin cepat keausan terjadi. Jarak tempuh yang lebih panjang menyebabkan roda mengalami lebih banyak gesekan dengan rel.</li>
+                            <li><strong class="font-semibold">Gesekan dengan Rel:</strong> Setiap kali roda berputar dan bersentuhan dengan rel, terjadi gesekan yang menyebabkan keausan pada permukaan roda.</li>
+                            <li><strong class="font-semibold">Kondisi Rel:</strong> Rel yang tidak rata atau rusak dapat meningkatkan tingkat keausan roda, terutama saat menempuh jarak jauh.</li>
+                        </ul>
+                        
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">2. Diameter Roda</h3>
+                        <ul class="list-disc list-inside mb-4 text-gray-600">
+                            <li><strong class="font-semibold">Panjang Permukaan yang Bersentuhan:</strong> Roda dengan diameter lebih besar memiliki permukaan kontak lebih luas, sehingga distribusi beban dan gesekan lebih merata.</li>
+                            <li><strong class="font-semibold">Jumlah Rotasi:</strong> Roda berdiameter lebih besar berputar lebih sedikit dibandingkan roda berdiameter lebih kecil untuk menempuh jarak yang sama, mengurangi potensi keausan.</li>
+                            <li><strong class="font-semibold">Pengaruh Tekanan:</strong> Diameter yang lebih besar dapat menahan beban lebih baik dan mengurangi tekanan pada titik-titik tertentu di permukaan roda.</li>
+                        </ul>
+                        
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">3. Kecepatan Rata-rata (40-50 km/jam)</h3>
+                        <ul class="list-disc list-inside mb-4 text-gray-600">
+                            <li><strong class="font-semibold">Gesekan Dinamis:</strong> Kecepatan yang lebih tinggi meningkatkan gaya gesek dinamis antara roda dan rel, yang dapat mempercepat keausan material roda.</li>
+                            <li><strong class="font-semibold">Gaya Sentrifugal:</strong> Kecepatan tinggi meningkatkan gaya sentrifugal pada roda, yang dapat menyebabkan roda mengalami gaya tarik lebih besar dan meningkatkan keausan.</li>
+                            <li><strong class="font-semibold">Frekuensi Perubahan Kecepatan:</strong> Perubahan kecepatan yang sering dapat menyebabkan keausan yang tidak merata karena gaya tambahan pada roda selama akselerasi dan deselerasi.</li>
+                        </ul>
+                        
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">Kesimpulan</h3>
+                        <p class="text-gray-600">Keausan roda dipengaruhi oleh interaksi kompleks antara jarak tempuh, diameter roda, dan kecepatan kereta. Penggunaan roda dalam jangka panjang dengan jarak tempuh yang tinggi, terutama dengan diameter roda yang lebih kecil dan pada kecepatan tinggi, akan mempercepat keausan. Oleh karena itu, penting untuk mempertimbangkan faktor-faktor ini dalam perawatan dan pengoperasian kereta. Pemantauan kondisi roda dan perawatan rutin sangat penting untuk menjaga performa optimal dan keselamatan operasional.</p>
+                    </div>
+                </div>
+            </div>
             {% endif %}
 
-            
-            {% if plot_url %}
-                <div class="mt-6">
-                    <p class="text-lg mt-2">Hasil Analisis: Kondisi Ban Dalam Keadaan <strong>{{ condition }}</strong></p>
-                </div>
-                <div class="mt-6">
-                    <h2 class="text-lg mb-4">Grafik: </h2>
-                    <img src="data:image/png;base64,{{ plot_url }}" alt="Grafik Master PV">
-                </div>
-            {% endif %}
+
         </div>
     </div>
 {% endblock %}
