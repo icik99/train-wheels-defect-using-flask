@@ -39,10 +39,6 @@
                 {% if assumption_decrease %}
                     <p class="text-lg mb-2"><strong>Presentase Penurunan Diameter Roda / Kilometer:</strong> {{assumption_decrease}} %</p>
                 {% endif %}
-                
-                {% if average_predicted_distance %}
-                    <p class="text-lg mb-2"><strong>Prediksi Jarak Tempuh Roda Ini: </strong> {{ average_predicted_distance }} Kilometer</p>
-                {% endif %}
 
                 <p class="text-lg mb-4"><strong>Tanggal beroprasi Roda TS-10:</strong> 28 November 2023 - 30 November 2023</p>
             </div>
@@ -58,14 +54,14 @@
                         </div>
                         <!-- Display Conditions Before and After Prediction -->
                         <p class="mb-2"><strong>Hasil Analisis:</strong></p>
-                        <p class="mb-2">Kondisi roda sekarang berada dalam keadaan: <strong>{{ condition_before }}</strong> </p>
+                        <p class="mb-2">Kondisi {{sisi}} sekarang berada dalam keadaan: <strong>{{ condition_before }}</strong> </p>
                         <!-- Display Predicted Distance -->
-                        <p class="mb-4">Kondisi Roda akan menjadi <strong>{{ conditions_after[sisi] }}</strong>  setelah menempuh jarak: <strong>{{ average_predicted_distance }} Kilometer</strong> <br/> berdasarkan prediksi, area yang akan mengalami ke-ausan antara lain:</p>
+                        <p class="mb-4">Kondisi {{sisi}} akan menjadi <strong>{{ conditions_after[sisi] }}</strong>  setelah menempuh jarak: <strong>{{ predicted_distances[sisi] }} Kilometer</strong> <br/> berdasarkan prediksi, area yang akan mengalami ke-ausan antara lain:</p>
                         
                         <!-- Display Negative Values for Each Side -->
                         <div class="negative-values">
                             {% if negative_values[sisi].empty %}
-                                <p>Tidak ada nilai negatif untuk {{ sisi }}.</p>
+                                <p class="font-semibold underline">Tidak ada nilai negatif untuk {{ sisi }}.</p>
                             {% else %}
                                 <table class="border-2 w-fit">
                                     <tr class="border-b-2">
@@ -92,7 +88,6 @@
                     <div class="bg-white shadow-lg rounded-lg py-8 px-2">
                         <h2 class="text-2xl font-bold  mb-4">Analisis Faktor yang Mempengaruhi Keausan Roda Kereta</h2>
                         
-                        <h3 class="text-xl font-semibold text-gray-700 mb-2"></h3>
                         <h3 class="text-xl font-semibold text-gray-700 mb-2">1. Jarak yang Ditempuh</h3>
                         <ul class="list-disc list-inside mb-4 text-gray-600">
                             <li><strong class="font-semibold">Frekuensi Penggunaan:</strong> Semakin sering roda digunakan, semakin cepat keausan terjadi. Jarak tempuh yang lebih panjang menyebabkan roda mengalami lebih banyak gesekan dengan rel.</li>

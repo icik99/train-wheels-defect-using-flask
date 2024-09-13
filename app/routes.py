@@ -16,8 +16,8 @@ from werkzeug.security import generate_password_hash
 import numpy as np
 from scipy.interpolate import make_interp_spline
 import math
-from sklearn.svm import SVR
 from sklearn.metrics import mean_squared_error
+from sklearn.svm import SVR
 
 main = Blueprint('main', __name__)
 
@@ -102,8 +102,14 @@ def about():
 def history():
     return render_template('history.html')
 
-def create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance):
 
+
+@main.route('/run_test', methods=['GET', 'POST'])
+@login_required
+def run_test():
+
+    # Fungsi untuk Visualisasi Grafik
+    def create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance):
         plt.figure(figsize=(12, 6))
 
         # Interpolasi dengan spline untuk membuat kurva lebih halus
@@ -143,8 +149,8 @@ def create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, pr
                 fontsize=12, verticalalignment='top', color='black', bbox=dict(facecolor='white', alpha=0.5))
 
         # Adding annotation for predicted distance
-        # plt.text(0.05, 0.90, f'Jarak Prediksi Akan Terjadi Aus: {predicted_distance} km', transform=plt.gca().transAxes,
-        #         fontsize=12, verticalalignment='top', color='black', bbox=dict(facecolor='white', alpha=0.5))
+        plt.text(0.05, 0.90, f'Jarak Prediksi Akan Terjadi Aus: {predicted_distance} km', transform=plt.gca().transAxes,
+                fontsize=12, verticalalignment='top', color='black', bbox=dict(facecolor='white', alpha=0.5))
 
         plt.gca().margins(x=0.05, y=0.15)
         plt.tight_layout()
@@ -156,14 +162,7 @@ def create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, pr
         plt.close()
 
         return base64.b64encode(img.getvalue()).decode()
-def determine_condition(series):
-                    nilai_positif = (series >= 0).sum()
-                    nilai_negatif = (series < 0).sum()
-                    return 'Bagus' if nilai_positif >= nilai_negatif else 'Aus'
 
-@main.route('/run_test', methods=['GET', 'POST'])
-@login_required
-def run_test():
 
     conditions_before = {}
     conditions_after = {}
@@ -175,12 +174,8 @@ def run_test():
     assumption_decrease = None
     penurunanAsumsiDalamDesimal = None
 
-    # Tambahkan variabel untuk menyimpan total jarak prediksi
-    total_predicted_distance = 0
-    jumlah_sisi = 4  # Karena ada 4 sisi
-    average_predicted_distance = 0
-
     if request.method == 'POST':
+    
         if 'file' not in request.files:
             flash('No file part')
             return redirect(request.url)
@@ -192,7 +187,7 @@ def run_test():
 
         current_distance_str = request.form.get('current_distance', '0')
         diameter_roda_str = request.form.get('diameter_roda', '0')
-
+        
         try:
             current_distance = float(current_distance_str)
             diameter_roda = float(diameter_roda_str)
@@ -202,6 +197,9 @@ def run_test():
             assumption_decrease = (penurunanDiameter / diameter_roda) * 100
             penurunanAsumsiDalamDesimal = assumption_decrease / 100
 
+            batas = 0.01
+            if penurunanAsumsiDalamDesimal < batas:
+                penurunanAsumsiDalamDesimal = 0.0001
 
         except ValueError:
             flash('Invalid input for distance or wheel diameter.')
@@ -209,74 +207,115 @@ def run_test():
 
         filename = file.filename
 
-        
-
         try:
             if file:
                 try:
-                    df = pd.read_csv(file)
+                    df = pd.read_csv(file)  # Membaca CSV
                 except FileNotFoundError:
                     return "File tidak ditemukan. Pastikan file diunggah dengan benar."
                 except pd.errors.EmptyDataError:
                     return "File CSV kosong. Mohon unggah file yang valid."
                 except pd.errors.ParserError:
                     return "Terjadi kesalahan saat membaca file. Pastikan format CSV sudah benar."
-
-                threshold = 1e-10
                 
-                # Menggunakan SVR untuk Prediksi Jarak Tempuh
+                # Memisahkan fitur dan target
+                X = df[['Titik']]  # Fitur (Titik)
+                y_sisi1 = df['Sisi 1']  # Target (Sisi 1)
+                y_sisi2 = df['Sisi 2']  # Target (Sisi 2)
+                y_sisi3 = df['Sisi 3']  # Target (Sisi 3)
+                y_sisi4 = df['Sisi 4']  # Target (Sisi 4)
+
+                # Scaling fitur
+                scaler_X = StandardScaler()
+                X_scaled = scaler_X.fit_transform(X)
+
+                # Scaling target untuk tiap sisi
+                scaler_y1 = StandardScaler()
+                scaler_y2 = StandardScaler()
+                scaler_y3 = StandardScaler()
+                scaler_y4 = StandardScaler()
+
+                y_sisi1_scaled = scaler_y1.fit_transform(y_sisi1.values.reshape(-1, 1)).ravel()
+                y_sisi2_scaled = scaler_y2.fit_transform(y_sisi2.values.reshape(-1, 1)).ravel()
+                y_sisi3_scaled = scaler_y3.fit_transform(y_sisi3.values.reshape(-1, 1)).ravel()
+                y_sisi4_scaled = scaler_y4.fit_transform(y_sisi4.values.reshape(-1, 1)).ravel()
+
+                # Melatih model SVR untuk tiap sisi
+                svr_model_sisi1 = SVR()
+                svr_model_sisi2 = SVR()
+                svr_model_sisi3 = SVR()
+                svr_model_sisi4 = SVR()
+
+                svr_model_sisi1.fit(X_scaled, y_sisi1_scaled)
+                svr_model_sisi2.fit(X_scaled, y_sisi2_scaled)
+                svr_model_sisi3.fit(X_scaled, y_sisi3_scaled)
+                svr_model_sisi4.fit(X_scaled, y_sisi4_scaled)
+
+                # Prediksi nilai menggunakan model yang telah dilatih
+                y_pred_sisi1_scaled = svr_model_sisi1.predict(X_scaled)
+                y_pred_sisi2_scaled = svr_model_sisi2.predict(X_scaled)
+                y_pred_sisi3_scaled = svr_model_sisi3.predict(X_scaled)
+                y_pred_sisi4_scaled = svr_model_sisi4.predict(X_scaled)
+
+                # Mengembalikan nilai prediksi ke skala aslinya
+                y_pred_sisi1 = scaler_y1.inverse_transform(y_pred_sisi1_scaled.reshape(-1, 1)).ravel()
+                y_pred_sisi2 = scaler_y2.inverse_transform(y_pred_sisi2_scaled.reshape(-1, 1)).ravel()
+                y_pred_sisi3 = scaler_y3.inverse_transform(y_pred_sisi3_scaled.reshape(-1, 1)).ravel()
+                y_pred_sisi4 = scaler_y4.inverse_transform(y_pred_sisi4_scaled.reshape(-1, 1)).ravel()
+
+
+                # Membuat DataFrame baru dengan nilai prediksi
+                df_pred = pd.DataFrame({
+                    'Titik': df['Titik'],
+                    'Sisi 1': y_pred_sisi1,
+                    'Sisi 2': y_pred_sisi2,
+                    'Sisi 3': y_pred_sisi3,
+                    'Sisi 4': y_pred_sisi4
+                })
+
+                for sisi in ['Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']:
+                    df_pred[sisi] = np.clip(df_pred[sisi], df[sisi.replace('', '')] - 0.001, df[sisi.replace('', '')] + 0.001)
+               
+                def determine_condition(series):
+                    # Jika ada nilai negatif dalam series, langsung return 'Aus'
+                    if (series < 0).any():
+                        return 'Aus'
+                    # Jika semua nilainya positif atau nol, return 'Bagus'
+                    return 'Bagus'
+
+
                 for sisi in ['Sisi 1', 'Sisi 2', 'Sisi 3', 'Sisi 4']:
                     df_pred = df.copy()
-                    predicted_distance = current_distance
-                    max_iterations = 10000
+                    predicted_distance = current_distance 
+                    max_iterations = 2000
                     iteration = 0
-                    print('Menghitung', sisi + '....')
+                    print('menghitung', sisi + '....')
 
                     try:
-                        # Persiapan data untuk SVR
-                        X = df[['Titik']].values
-                        y = df[sisi].values
-
-                        svr_model = SVR(kernel='rbf')
-                        svr_model.fit(X, y)  # Melatih model SVR
 
                         while iteration < max_iterations:
-                            # Prediksi nilai dengan SVR
-                            df_pred[sisi] = svr_model.predict(X)
-                            
-                            penurunan_dinamis = (predicted_distance - current_distance) * penurunanAsumsiDalamDesimal
-                            df_pred[sisi] = df_pred[sisi] - penurunan_dinamis
-                            
 
-                            nilai_positif_setelah_prediksi = (df_pred[sisi] >= 0).sum()
-                            nilai_negatif_setelah_prediksi = (df_pred[sisi] < 0).sum()
-
-                            if nilai_negatif_setelah_prediksi > nilai_positif_setelah_prediksi:
-                                print(sisi, 'berhasil dihitung')
-                                print('---------------------------')
-                                print('Df Asli:')
-                                print(df[sisi])
-                                print('Df Prediksi:')
-                                print(df_pred[sisi])
-
-                                break
+                            df_pred[sisi] = (df_pred[sisi] - (df[sisi].abs() * penurunanAsumsiDalamDesimal))
+                            nilaiPositifSetelahPrediksi = (df_pred[sisi] >= 0).sum()
+                            nilaiNegatifSetelahPrediksi = (df_pred[sisi] < 0).sum()
 
                             predicted_distance += 1
                             iteration += 1
-                            print('Menghitung ' + sisi + ' | Prediksi Jarak = ', predicted_distance, ' Kilometer')
 
-                        # Hitung MSE untuk model SVR
-                        mse = mean_squared_error(y, df_pred[sisi])
-                        print(f'Mean Squared Error (MSE):', mse)
+                            print('Menghitung ' + sisi + ' | Prediksi Jarak = ' , predicted_distance, ' Kilometer')
+                    except Exception as e:
+                        return f"Terjadi kesalahan saat menghitung prediksi pada {sisi}: {str(e)}"
 
-                        # Membulatkan nilai asli dan prediksi
+                    try:
                         df[sisi] = df[sisi].round(2)
                         df_pred[sisi] = df_pred[sisi].round(2)
 
-                        conditions_before[sisi] = determine_condition(df[sisi])
-                        conditions_after[sisi] = 'Aus'
+                        
+                        conditions_before[sisi] = 'Bagus'
+                        conditions_after[sisi] = determine_condition(df_pred[sisi])
 
                         predicted_distances[sisi] = predicted_distance
+                        # Ambil nilai-nilai negatif
                         negative_values[sisi] = df_pred[df_pred[sisi] < 0].copy()
                         negative_values[sisi]['Titik'] = negative_values[sisi]['Titik'].astype(int)
 
@@ -284,24 +323,26 @@ def run_test():
                         y_current = df[sisi]
                         x_pred = df_pred['Titik']
                         y_pred = df_pred[sisi]
-
+                        
                         graphs_urls[sisi] = create_plot(x_current, y_current, x_pred, y_pred, sisi, current_distance, predicted_distance)
-
-                        total_predicted_distance += predicted_distance
-
                     except KeyError as e:
                         return f"Kolom yang diminta tidak ditemukan: {e}. Pastikan semua kolom yang dibutuhkan ada di dataset."
                     except Exception as e:
                         return f"Terjadi kesalahan dalam proses perhitungan atau plotting: {str(e)}"
+                        
+                    # Menghitung MSE
+                    mse_sisi1 = mean_squared_error(df['Sisi 1'], y_pred_sisi1)
+                    mse_sisi2 = mean_squared_error(df['Sisi 2'], y_pred_sisi2)
+                    mse_sisi3 = mean_squared_error(df['Sisi 3'], y_pred_sisi3)
+                    mse_sisi4 = mean_squared_error(df['Sisi 4'], y_pred_sisi4)
 
-            # Pastikan total_predicted_distance hanya dihitung jika setidaknya satu prediksi berhasil
-            if total_predicted_distance > 0:
-                average_predicted_distance = round(total_predicted_distance / jumlah_sisi, 2)
-
+                    # Hasil prediksi dan MSE
+                    print("MSE Sisi 1:", mse_sisi1)
+                    print("MSE Sisi 2:", mse_sisi2)
+                    print("MSE Sisi 3:", mse_sisi3)
+                    print("MSE Sisi 4:", mse_sisi4)
         except Exception as e:
             return f"Terjadi kesalahan yang tidak terduga: {str(e)}"
-
-        # Hitung rata-rata predicted_distance
 
     # ini untuk return / mengembalikan nilai hasil perhitungan dan prediksi ke website
     return render_template(
@@ -313,8 +354,7 @@ def run_test():
         predicted_distances=predicted_distances,
         current_distance=current_distance,
         assumption_decrease=assumption_decrease,
-        negative_values = negative_values,
-        average_predicted_distance=average_predicted_distance
+        negative_values = negative_values
     )
 
     return render_template('run_test.html')
